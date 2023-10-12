@@ -5,28 +5,33 @@
 
 using namespace std;
 
-const int Block_Size = 10;
+const int Block_Size = 1;
 
 class Matrix
 {
 public:
-	Matrix(int prows, int pcolumns, string pfile) :rows(rows), columns(pcolumns), filename(pfile)
+	Matrix(int prows, int pcolumns, string pfile) :rows(prows), columns(pcolumns), filename(pfile)
 	{
 		start = 0;
-		misses = 1;   //第一次缺失
+		dirty = 0;
+		misses = 0;
+		name = filename.substr(0, 1);
 
-		cout << "初始化完成" << endl;
+		refreshCache(0);
+		misses++;
 	}
 
+	void compute(int x, int y, int value);   //更新矩阵元素
 
-
-	int getElement(int x, int y);  //从Cache获取元素
+	int getElement(int x, int y);  //获取矩阵元素
 
 	void refreshCache(int position);   //缺失时刷新Cache
 
-	bool InCache(int x, int y);  //判断是否命中Cache
+	bool InCache(int position);  //判断是否命中Cache
 
 	void Dirty();  //修改dirty位
+
+	void printCache();  //打印cache
 
 
 private:
@@ -34,8 +39,9 @@ private:
 	int rows;  //矩阵行数
 	int columns;  //矩阵列数
 	string filename;  //存储矩阵的文件名
-	int start;  //缓存中第一个元素在文件中的起始位置
+	int start;  //缓存中第一个元素的下标
 	int misses; //命中缺失次数
 	int dirty;  //脏位，0为未改，1为改
+	string name;   
 };
 

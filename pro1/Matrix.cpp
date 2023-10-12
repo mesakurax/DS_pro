@@ -1,14 +1,39 @@
 #include "Matrix.h"
 
-int Matrix::getElement(int x, int y)
+void Matrix::compute(int x, int y, int value)
 {
 	int position = x * rows + y;
-	if (!InCache(x, y))
+	cout << "访问矩阵" << name << "下标为: (" << x << "," << y << ")" << endl;
+
+	//缺失时刷新cache
+	if (!InCache(position))
 	{
+		cout << "矩阵" << name << "缺失, 更新Cache" << endl;
 		refreshCache(position);
 		misses++;
 	}
 	int index = position - start;
+
+	cout << "矩阵" << name << "[" << x << "," << y << "]=" << cache[index];
+	cache[index] += value;  //更新元素
+	cout << "--->" << cache[index] << endl << endl;
+	dirty = 1;   //脏位设置为1
+}
+
+int Matrix::getElement(int x, int y)
+{
+	int position = x * rows + y;
+	cout << "访问矩阵" << name << "下标为: (" << x << "," << y << ")" << endl;
+
+	//缺失时刷新cache
+	if (!InCache(position))
+	{
+		cout << "矩阵" << name << "缺失, 更新Cache" << endl;
+		refreshCache(position);
+		misses++;
+	}
+	int index = position - start;
+	cout << "访问元素为：" <<name<<"["<<x<<","<<y<<"]="<< cache[index] << endl << endl;
 	return cache[index];
 }
 
@@ -19,7 +44,7 @@ void Matrix::refreshCache(int position)
 	{
 		std::ofstream outFile(filename, std::ios::binary | std::ios::in);  
 
-		outFile.seekp(start);
+		outFile.seekp(start*sizeof(int));
 
 		// 逐个写回cache的元素
 		for (int i = 0; i < Block_Size; i++)
@@ -34,13 +59,13 @@ void Matrix::refreshCache(int position)
 		dirty = 0;
 	}
 
-	start = position;
+	this->start = position;
 
 	// 打开矩阵文件
 	std::ifstream file(filename, std::ios::binary);  
 
 	 // 定位到初始元素的偏移量位置
-	file.seekg(start);
+	file.seekg(start*sizeof(int));
 
 	// 逐个读取元素到数组
 	for (int i = 0; i < Block_Size; i++) {
@@ -48,20 +73,14 @@ void Matrix::refreshCache(int position)
 	}
 
 	// 输出数组元素
-	std::cout << "Cache 更新为:  ";
-	for (int i = 0; i < Block_Size; i++) {
-		std::cout << cache[i] << " ";
-	}
-	std::cout << std::endl;
+	printCache();
 
 	// 关闭文件
 	file.close();
 }
 
-bool Matrix::InCache(int x, int y)
+bool Matrix::InCache(int position)
 {
-	int position = x * columns + y;   //定位元素在文件中的位置
-
 	//判断是否命中
 	if ((position > start || position == start) &&
 		(position < start + Block_Size))
@@ -73,4 +92,13 @@ bool Matrix::InCache(int x, int y)
 void Matrix::Dirty()
 {
 	dirty = 1;
+}
+
+void Matrix::printCache()
+{
+	std::cout << "Cache"<<name<<" :  ";
+	for (int i = 0; i < Block_Size; i++) {
+		std::cout << cache[i] << " ";
+	}
+	cout << endl<<endl;
 }
