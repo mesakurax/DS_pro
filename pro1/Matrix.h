@@ -5,18 +5,22 @@
 
 using namespace std;
 
-const int Block_Size = 1;
+const int Block_Size = 4;
 
 class Matrix
 {
 public:
-	Matrix(int prows, int pcolumns, string pfile) :rows(prows), columns(pcolumns), filename(pfile)
+	Matrix(int prows, int pcolumns, string pfile)
 	{
+		rows = prows;
+		columns = pcolumns;
 		start = 0;
 		dirty = 0;
+		filename=pfile;
 		misses = 0;
 		name = filename.substr(0, 1);
 
+		//首次缺失刷新
 		refreshCache(0);
 		misses++;
 	}
@@ -29,9 +33,9 @@ public:
 
 	bool InCache(int position);  //判断是否命中Cache
 
-	void Dirty();  //修改dirty位
-
 	void printCache();  //打印cache
+
+	void writeback();  //cache写回文件
 
 
 private:
@@ -43,5 +47,6 @@ private:
 	int misses; //命中缺失次数
 	int dirty;  //脏位，0为未改，1为改
 	string name;   
+	int num = 0;  //有效元素数量
 };
 
