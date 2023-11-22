@@ -17,7 +17,7 @@ void creat(string filename, int num)
     file.close();
 }
 
-//从文件打印矩阵
+//打印
 void PrintBinaryFile(string filename)
 {
     ifstream file(filename, ios::binary);
@@ -37,15 +37,16 @@ void PrintBinaryFile(string filename)
 
 int main()
 {
-    creat("test.bin", 17);
-    PrintBinaryFile("test.bin");
-    Buffer a("test.bin", 3);
-    a.Generation();
-
+    creat("test.bin", 41);
     PrintBinaryFile("test.bin");
     cout << endl;
+
+    Buffer a("test.bin", 3);
+    a.Generation();
+    cout << "初始归并段: " << endl;
+    PrintBinaryFile("test.bin");
+
+    cout << endl;
     a.Merge();
-    a.read0(0, 3);
-    cout << a.inum_0;
 }
 

@@ -69,9 +69,11 @@ void Buffer::Merge()
 	file.close();
 
 	int cur_len = length;  //当前归并段长度
+
+	//只剩一个归并段时退出
 	while (cur_len < file_num)
 	{
-		cout << file_num << endl;
+		cout << "\n归并段长度为: " << 2 * cur_len << endl << endl;
 		int merge_num = ceil(static_cast<double>(file_num) / (2 * cur_len));  //归并次数
 
 		for (int i = 0; i < merge_num; i++)  
@@ -89,16 +91,17 @@ void Buffer::Merge()
 			int end_1 = ((off_1 + cur_len) >= file_num) ? (file_num - 1) : (off_1 + cur_len - 1);
 
 
-			cout << off_0 << " " << end_0 << endl;
-			cout << off_1 << " " << end_1 << endl;
+			cout <<"归并段1："<<off_0 << " " << end_0 << endl;
+			cout <<"归并段2："<<off_1 << " " << end_1 << endl;
 		  
 			//两个input buffer的指针
 			int index0 = -1;
 			int index1 = -1;
 
 			//当两个归并段至少有一个完成时退出
-			while (off_0 <= end_0 && off_1 <= end_1)  
+			while(!((off_0>end_0 && index0==-1)||(off_1 > end_1 && index1 == -1)))
 			{
+				
 				//若input为空，则进行读入
 				if (index0 == -1)
 				{
@@ -119,13 +122,12 @@ void Buffer::Merge()
 					if (I0[index0] <= I1[index1])
 					{
 						write(I0[index0]);
-						cout << I0[index0] << " ";
 						index0++;
 					}
 					else
 					{
+
 						write(I1[index1]);
-						cout << I1[index1] << " ";
 						index1++;
 					}
 				}
@@ -143,10 +145,7 @@ void Buffer::Merge()
 				//先导入input里的
 				if(index1!=-1)
 					for (int j = index1; j < inum_1; j++)
-					{
-						cout << I1[j] << " ";
 						write(I1[j]);
-					}
 
 				//还未读进来的也导入
 				while (off_1 <= end_1)
@@ -154,10 +153,7 @@ void Buffer::Merge()
 					read1(off_1, end_1);
 					off_1 += inum_1;
 					for (int j = 0; j < inum_1; j++)
-					{
-						cout << I1[j] << " ";
 						write(I1[j]);
-					}
 				}
 			}
 			if (off_1 > end_1)
@@ -165,24 +161,16 @@ void Buffer::Merge()
 				if (index0 != -1)
 				{
 					for (int j = index0; j < inum_0; j++)
-					{
-						cout << I0[j] << " ";
 						write(I0[j]);
-					}
 				}
 				while (off_0 <= end_0)
 				{
 					read0(off_0, end_0);
 					off_0 += inum_0;
 					for (int j = 0; j < inum_0; j++)
-					{
-						cout << I0[j] << " ";
 						write(I0[j]);
-					}
 				}
 			}
-
-			cout << endl;
 
 			writeback();
 			writeInfile(i * cur_len * 2);
@@ -197,7 +185,7 @@ void Buffer::read0(int offset, int end)
 	file.seekg(offset * sizeof(int));
 
 	// 计算应该读取的元素个数
-	int elementsToRead = min(length, end - offset + 1);
+	int elementsToRead = min(I_size, end - offset + 1);
 
 	// 读取元素
 	file.read(reinterpret_cast<char*>(I0), elementsToRead * sizeof(int));
@@ -218,7 +206,7 @@ void Buffer::read1(int offset, int end)
 	file.seekg(offset * sizeof(int));
 
 	// 计算应该读取的元素个数
-	int elementsToRead = min(length, end - offset + 1);
+	int elementsToRead = min(I_size, end - offset + 1);
 
 	// 读取元素
 	file.read(reinterpret_cast<char*>(I1), elementsToRead * sizeof(int));
@@ -245,6 +233,7 @@ void Buffer::write(int value)
 void Buffer::writeback()
 {
 	fstream file("temp.bin", ios::binary | ios::out | ios::app);
+	file.seekp(ios::end);
 	for (int i = 0; i < onum; i++)
 		file.write(reinterpret_cast<const char*>(&Out[i]), sizeof(int));
 	file.close();
@@ -255,17 +244,17 @@ void Buffer::writeInfile(int start)
 {
 	ifstream infile("temp.bin", std::ios::binary);
 	
-	fstream file(filename, std::ios::binary|ios::in|ios::out);
+	fstream file(filename, std::ios::in | std::ios::out | std::ios::binary);;
 
-	// 定位到起始位置
-	file.seekp(start * sizeof(int), std::ios::beg);
+	file.seekp(start*sizeof(int));
 
 	int value;
+	cout << "归并完成: ";
 	while (infile.read(reinterpret_cast<char*>(&value), sizeof(int))) {
 		cout << value << " ";
 		file.write(reinterpret_cast<const char*>(&value), sizeof(int));
 	}
-	cout << endl;
+	cout << endl << endl;
 	infile.close();
 	file.close();
 }

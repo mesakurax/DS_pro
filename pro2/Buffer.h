@@ -8,7 +8,7 @@
 
 using namespace std;
 
-const int I_size = 10;
+const int I_size = 3;
 const int O_size = 10;
 
 class Buffer
